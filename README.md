@@ -1,350 +1,244 @@
-[中文阅读](README_zh_cn.md)
-[日本語で読む](README_ja_jp.md)
+# Hunyuan3D-2 — cleaned Apple-Silicon workbench
 
-<p align="center"> 
-  <img src="https://github.com/user-attachments/assets/efb402a1-0b09-41e0-a6cb-259d442e76aa">
+This repository is a reorganized working copy of Hunyuan3D-2 with extra Apple Silicon and texture-pipeline work. The goal here is not to mirror Tencent's original README one-for-one. The goal is to make this repo understandable, runnable, and hackable without having to mentally decode fifty checkpoint names first.
 
-</p>
+If you only remember one thing, remember this:
 
-<div align="center">
-  <a href=https://3d.hunyuan.tencent.com target="_blank"><img src=https://img.shields.io/badge/Official%20Site-333399.svg?logo=homepage height=22px></a>
-  <a href=https://huggingface.co/spaces/tencent/Hunyuan3D-2  target="_blank"><img src=https://img.shields.io/badge/%F0%9F%A4%97%20Demo-276cb4.svg height=22px></a>
-  <a href=https://huggingface.co/tencent/Hunyuan3D-2 target="_blank"><img src=https://img.shields.io/badge/%F0%9F%A4%97%20Models-d96902.svg height=22px></a>
-  <a href=https://3d-models.hunyuan.tencent.com/ target="_blank"><img src= https://img.shields.io/badge/Page-bb8a2e.svg?logo=github height=22px></a>
-  <a href=https://discord.gg/dNBrdrGGMa target="_blank"><img src= https://img.shields.io/badge/Discord-white.svg?logo=discord height=22px></a>
-  <a href=https://arxiv.org/abs/2501.12202 target="_blank"><img src=https://img.shields.io/badge/Report-b5212f.svg?logo=arxiv height=22px></a>
-  <a href=https://x.com/TencentHunyuan target="_blank"><img src=https://img.shields.io/badge/Hunyuan-black.svg?logo=x height=22px></a>
- <a href="#community-resources" target="_blank"><img src=https://img.shields.io/badge/Community-lavender.svg?logo=homeassistantcommunitystore height=22px></a>
-</div>
+**DiT makes shape. Paint makes texture. Delight cleans the input image.**
 
-[//]: # (  <a href=# target="_blank"><img src=https://img.shields.io/badge/Report-b5212f.svg?logo=arxiv height=22px></a>)
+Everything else in the model zoo is mostly a question of size, speed, or whether the model expects one image or many.
 
-[//]: # (  <a href=# target="_blank"><img src= https://img.shields.io/badge/Colab-8f2628.svg?logo=googlecolab height=22px></a>)
+---
 
-[//]: # (  <a href="#"><img alt="PyPI - Downloads" src="https://img.shields.io/pypi/v/mulankit?logo=pypi"  height=22px></a>)
+## What this repo is for
 
-<br>
+This fork is mainly being used for three things:
 
-<p align="center">
-“ Living out everyone’s imagination on creating and manipulating 3D assets.”
-</p>
+1. **Generating meshes from images** on Apple Silicon.
+2. **Painting / texturing meshes** on Apple Silicon.
+3. **Profiling and optimizing the texture pipeline**, especially UV unwrap, rasterization, and multiview paint performance.
 
-https://github.com/user-attachments/assets/a2cbc5b8-be22-49d7-b1c3-7aa2b20ba460
+The texture side has already been modified locally to improve real performance on Mac:
 
+- compiled mesh inpaint is enabled instead of the slow Python fallback
+- UV unwrap can be cached
+- UV unwrap can optionally overlap with diffusion
+- an experimental GPU cube-projection UV backend exists
+- output artifacts are now organized into folders instead of being dumped into one flat `outputs/` directory
 
-## 🔥 News
+---
 
-- July 26, 2025: 🤗 We release the first open-source, simulation-capable, immersive 3D world generation model, [HunyuanWorld-1.0](https://github.com/Tencent-Hunyuan/HunyuanWorld-1.0)!
-- June 23, 2025: 📄 Release the system technical report of [Hunyuan3D 2.5](https://arxiv.org/abs/2506.16504).
-- June 13, 2025: 🤗 Release [Hunyuan3D-2.1](https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1), fully open-sourced with new PBR model, VAE encoder, and all training code. 
-- Apr 1, 2025: 🤗 Release turbo paint model [Hunyuan3D-Paint-v2-0-Turbo](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0-turbo), and multiview texture generation pipeline, try it [here](examples/fast_texture_gen_multiview.py)! Stay tuned for our new texture generation model [RomanTex](https://github.com/oakshy/RomanTex) and PBR material generation [MaterialMVP](https://github.com/ZebinHe/MaterialMVP/)! 
-- Mar 19, 2025: 🤗 Release turbo model [Hunyuan3D-2-Turbo](https://huggingface.co/tencent/Hunyuan3D-2/), [Hunyuan3D-2mini-Turbo](https://huggingface.co/tencent/Hunyuan3D-2mini/) and [FlashVDM](https://github.com/Tencent/FlashVDM).
-- Mar 18, 2025: 🤗 Release multiview shape model [Hunyuan3D-2mv](https://huggingface.co/tencent/Hunyuan3D-2mv) and 0.6B
-  shape model [Hunyuan3D-2mini](https://huggingface.co/tencent/Hunyuan3D-2mini).
-- Feb 14, 2025: 🛠️ Release texture enhancement module, please obtain high-definition textures
-  via [here](minimal_demo.py)!
-- Feb 3, 2025: 🐎
-  Release [Hunyuan3D-DiT-v2-0-Fast](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-fast), our
-  guidance distillation model that could half the dit inference time, see [here](minimal_demo.py) for usage.
-- Jan 27, 2025: 🛠️ Release Blender addon for Hunyuan3D 2.0, Check it out [here](#blender-addon).
-- Jan 23, 2025: 💬 We thank community members for
-  creating [Windows installation tool](https://github.com/YanWenKun/Hunyuan3D-2-WinPortable), ComfyUI support
-  with [ComfyUI-Hunyuan3DWrapper](https://github.com/kijai/ComfyUI-Hunyuan3DWrapper)
-  and [ComfyUI-3D-Pack](https://github.com/MrForExample/ComfyUI-3D-Pack) and other
-  awesome [extensions](#community-resources).
-- Jan 21, 2025: 💬 Enjoy exciting 3D generation on our website [Hunyuan3D Studio](https://3d.hunyuan.tencent.com)!
-- Jan 21, 2025: 🤗 Release inference code and pretrained models
-  of [Hunyuan3D 2.0](https://huggingface.co/tencent/Hunyuan3D-2). Please give it a try
-  via [huggingface space](https://huggingface.co/spaces/tencent/Hunyuan3D-2) and
-  our [official site](https://3d.hunyuan.tencent.com)!
+## Repo layout
 
-> Join our **[Wechat](#)** and **[Discord](https://discord.gg/dNBrdrGGMa)** group to discuss and find help from us.
+Run commands from the repo root.
 
-| Wechat Group                                     | Xiaohongshu                                           | X                                           | Discord                                           |
-|--------------------------------------------------|-------------------------------------------------------|---------------------------------------------|---------------------------------------------------|
-| <img src="assets/qrcode/wechat.png"  height=140> | <img src="assets/qrcode/xiaohongshu.png"  height=140> | <img src="assets/qrcode/x.png"  height=140> | <img src="assets/qrcode/discord.png"  height=140> |        
+```text
+Hunyuan3D-2/
+├── assets/                     # input images, templates, static assets
+├── docs/                       # upstream docs build files
+├── examples/
+│   ├── debug/                  # probes, extraction tools, render checks
+│   ├── mps/                    # Apple Silicon / MPS-focused scripts
+│   ├── shape/                  # shape-only generation examples
+│   └── texture/                # texture / textured-shape examples
+├── hy3dgen/                    # library code
+├── outputs/
+│   ├── benchmark/              # speed-test artifacts and optimized outputs
+│   ├── compare/                # side-by-side comparison images
+│   ├── custom/                 # custom one-off generation results
+│   ├── debug/
+│   │   ├── extracted/          # textures extracted from GLBs
+│   │   ├── rendered_views/     # rendered view checks
+│   │   └── stages/             # intermediate paint-stage dumps
+│   └── demo/                   # canonical demo mesh + textured demo outputs
+├── minimal_demo.py
+├── gradio_app.py
+├── api_server.py
+└── README.md
+```
 
+There are two small companion READMEs now as well:
 
+- [`examples/README.md`](examples/README.md)
+- [`outputs/README.md`](outputs/README.md)
 
+---
 
-## **Abstract**
+## Model names, in plain English
 
-We present Hunyuan3D 2.0, an advanced large-scale 3D synthesis system for generating high-resolution textured 3D assets.
-This system includes two foundation components: a large-scale shape generation model - Hunyuan3D-DiT, and a large-scale
-texture synthesis model - Hunyuan3D-Paint.
-The shape generative model, built on a scalable flow-based diffusion transformer, aims to create geometry that properly
-aligns with a given condition image, laying a solid foundation for downstream applications.
-The texture synthesis model, benefiting from strong geometric and diffusion priors, produces high-resolution and vibrant
-texture maps for either generated or hand-crafted meshes.
-Furthermore, we build Hunyuan3D-Studio - a versatile, user-friendly production platform that simplifies the re-creation
-process of 3D assets. It allows both professional and amateur users to manipulate or even animate their meshes
-efficiently.
-We systematically evaluate our models, showing that Hunyuan3D 2.0 outperforms previous state-of-the-art models,
-including the open-source models and closed-source models in geometry details, condition alignment, texture quality, and
-e.t.c.
+Hunyuan names are noisy, but the structure is simple.
 
+| Name piece | Meaning |
+|---|---|
+| `DiT` | shape generator |
+| `Paint` | texture / material generator |
+| `Delight` | preprocess input image to remove lighting / highlights |
+| `mini` | smaller shape model |
+| `mv` | multiview shape model; expects multiple input views |
+| `2.0` / `2.1` | model generation / release family |
+| `Fast` | guidance-distilled faster version |
+| `Turbo` | step-distilled faster version |
+| `paintpbr` | newer 2.1 paint/material model with PBR-oriented output |
 
+The easiest way to decode a checkpoint name is:
 
-<p align="center">
-  <img src="assets/images/system.jpg">
-</p>
+- `hunyuan3d-dit-*` → **shape**
+- `hunyuan3d-paint*` → **texture**
+- `hunyuan3d-delight-*` → **image cleanup before texture**
 
-## ☯️ **Hunyuan3D 2.0**
+---
 
-### Architecture
+## Model zoo cheat sheet
 
-Hunyuan3D 2.0 features a two-stage generation pipeline, starting with the creation of a bare mesh, followed by the
-synthesis of a texture map for that mesh. This strategy is effective for decoupling the difficulties of shape and
-texture generation and also provides flexibility for texturing either generated or handcrafted meshes.
+### The Hugging Face repos
 
-<p align="left">
-  <img src="assets/images/arch.jpg">
-</p>
+Tencent spread the checkpoints across a few Hugging Face repos. Think of each repo as a container, and the `subfolder` as the actual model you choose.
 
-### Performance
+| HF repo | What lives there | Link |
+|---|---|---|
+| `tencent/Hunyuan3D-2` | original 2.0 shape, paint, delight, turbo variants | https://huggingface.co/tencent/Hunyuan3D-2 |
+| `tencent/Hunyuan3D-2.1` | newer 2.1 shape + paint PBR model | https://huggingface.co/tencent/Hunyuan3D-2.1 |
+| `tencent/Hunyuan3D-2mini` | smaller single-image shape models | https://huggingface.co/tencent/Hunyuan3D-2mini |
+| `tencent/Hunyuan3D-2mv` | multiview shape models | https://huggingface.co/tencent/Hunyuan3D-2mv |
 
-We have evaluated Hunyuan3D 2.0 with other open-source as well as close-source 3d-generation methods.
-The numerical results indicate that Hunyuan3D 2.0 surpasses all baselines in the quality of generated textured 3D assets
-and the condition following ability.
+### The actual checkpoints
 
-| Model                   | CMMD(⬇)   | FID_CLIP(⬇) | FID(⬇)      | CLIP-score(⬆) |
-|-------------------------|-----------|-------------|-------------|---------------|
-| Top Open-source Model1  | 3.591     | 54.639      | 289.287     | 0.787         |
-| Top Close-source Model1 | 3.600     | 55.866      | 305.922     | 0.779         |
-| Top Close-source Model2 | 3.368     | 49.744      | 294.628     | 0.806         |
-| Top Close-source Model3 | 3.218     | 51.574      | 295.691     | 0.799         |
-| Hunyuan3D 2.0           | **3.193** | **49.165**  | **282.429** | **0.809**     |
+| HF repo | Subfolder | Stage | Input style | Size | What it is | When to use it | Link |
+|---|---|---:|---|---:|---|---|---|
+| `tencent/Hunyuan3D-2.1` | `hunyuan3d-dit-v2-1` | shape | single image | 3.0B | newer high-capacity 2.1 shape model | use when you want the newest single-image shape model and can afford it | https://huggingface.co/tencent/Hunyuan3D-2.1/tree/main/hunyuan3d-dit-v2-1 |
+| `tencent/Hunyuan3D-2.1` | `hunyuan3d-paintpbr-v2-1` | texture | mesh + image | 1.3B | newer 2.1 PBR-aware paint/material model | use when you want the best newer paint model and have the 2.1 assets set up correctly | https://huggingface.co/tencent/Hunyuan3D-2.1/tree/main/hunyuan3d-paintpbr-v2-1 |
+| `tencent/Hunyuan3D-2mini` | `hunyuan3d-dit-v2-mini` | shape | single image | 0.6B | small single-image shape model | best practical starting point on Apple Silicon | https://huggingface.co/tencent/Hunyuan3D-2mini/tree/main/hunyuan3d-dit-v2-mini |
+| `tencent/Hunyuan3D-2mini` | `hunyuan3d-dit-v2-mini-fast` | shape | single image | 0.6B | faster guidance-distilled mini model | use when you want more speed than base mini | https://huggingface.co/tencent/Hunyuan3D-2mini/tree/main/hunyuan3d-dit-v2-mini-fast |
+| `tencent/Hunyuan3D-2mini` | `hunyuan3d-dit-v2-mini-turbo` | shape | single image | 0.6B | step-distilled faster mini model | use when you want the fastest mini-ish shape path | https://huggingface.co/tencent/Hunyuan3D-2mini/tree/main/hunyuan3d-dit-v2-mini-turbo |
+| `tencent/Hunyuan3D-2mv` | `hunyuan3d-dit-v2-mv` | shape | multiview images | 1.1B | multiview shape model | use when you actually have several views of the object | https://huggingface.co/tencent/Hunyuan3D-2mv/tree/main/hunyuan3d-dit-v2-mv |
+| `tencent/Hunyuan3D-2mv` | `hunyuan3d-dit-v2-mv-fast` | shape | multiview images | 1.1B | faster multiview shape model | use for faster multiview experiments | https://huggingface.co/tencent/Hunyuan3D-2mv/tree/main/hunyuan3d-dit-v2-mv-fast |
+| `tencent/Hunyuan3D-2mv` | `hunyuan3d-dit-v2-mv-turbo` | shape | multiview images | 1.1B | turbo multiview shape model | fastest multiview shape path | https://huggingface.co/tencent/Hunyuan3D-2mv/tree/main/hunyuan3d-dit-v2-mv-turbo |
+| `tencent/Hunyuan3D-2` | `hunyuan3d-dit-v2-0` | shape | single image | 1.1B | original 2.0 single-image shape model | use if you specifically want 2.0 base behavior | https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0 |
+| `tencent/Hunyuan3D-2` | `hunyuan3d-dit-v2-0-fast` | shape | single image | 1.1B | faster 2.0 shape model | use for faster 2.0 shape inference | https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-fast |
+| `tencent/Hunyuan3D-2` | `hunyuan3d-dit-v2-0-turbo` | shape | single image | 1.1B | turbo 2.0 shape model | use for fastest 2.0-style shape inference | https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-turbo |
+| `tencent/Hunyuan3D-2` | `hunyuan3d-paint-v2-0` | texture | mesh + image | 1.3B | original 2.0 paint model | use if you want base 2.0 paint behavior | https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0 |
+| `tencent/Hunyuan3D-2` | `hunyuan3d-paint-v2-0-turbo` | texture | mesh + image | 1.3B | faster turbo paint model | currently the most practical paint model in this repo on Mac | https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0-turbo |
+| `tencent/Hunyuan3D-2` | `hunyuan3d-delight-v2-0` | preprocess | image | 1.3B | input-image delight / de-lighting model | optional helper before paint; often skipped on MPS | https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-delight-v2-0 |
 
-Generation results of Hunyuan3D 2.0:
-<p align="left">
-  <img src="assets/images/e2e-1.gif"  height=250>
-  <img src="assets/images/e2e-2.gif"  height=250>
-</p>
+---
 
-## 🎁 Models Zoo
+## Which models should you actually use?
 
-It takes 6 GB VRAM for shape generation and 16 GB for shape and texture generation in total.
+For this repo, the practical choices are:
 
-Hunyuan3D-2-1 Series
+| Use case | Recommended choice | Why |
+|---|---|---|
+| single-image shape on Apple Silicon | `tencent/Hunyuan3D-2mini` + `hunyuan3d-dit-v2-mini` | best simple starting point for Mac work |
+| fastest single-image shape experiments | `tencent/Hunyuan3D-2mini` + `hunyuan3d-dit-v2-mini-turbo` | smaller and more speed-oriented |
+| multiview shape from several photos | `tencent/Hunyuan3D-2mv` + `hunyuan3d-dit-v2-mv` or `-turbo` | built for multiple input views |
+| texture on Apple Silicon right now | `tencent/Hunyuan3D-2` + `hunyuan3d-paint-v2-0-turbo` | currently the most reliable path in this repo |
+| newer texture/material model | `tencent/Hunyuan3D-2.1` + `hunyuan3d-paintpbr-v2-1` | the one to use when you specifically want 2.1 paint and the local setup is correct |
 
-| Model                | Description                   | Date       | Size | Huggingface                                                                             |
-|----------------------|-------------------------------|------------|------|-----------------------------------------------------------------------------------------|
-| Hunyuan3D-DiT-v2-1   | Mini Image to Shape Model     | 2025-06-13 | 3.0B | [Download](https://huggingface.co/tencent/Hunyuan3D-2.1/tree/main/hunyuan3d-dit-v2-1)   |
-| Hunyuan3D-Paint-v2-1 | Texture Generation Model    | 2025-06-13 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2.1/tree/main/hunyuan3d-paintpbr-v2-1) |
+Current local reality: the MPS paint scripts in this repo try **2.1 paint first** and then fall back to **2.0 turbo paint** if 2.1 fails to load.
 
-Hunyuan3D-2mini Series
+---
 
-| Model                       | Description                   | Date       | Size | Huggingface                                                                                      |
-|-----------------------------|-------------------------------|------------|------|--------------------------------------------------------------------------------------------------|
-| Hunyuan3D-DiT-v2-mini-Turbo | Step Distillation Version     | 2025-03-19 | 0.6B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mini/tree/main/hunyuan3d-dit-v2-mini-turbo) |
-| Hunyuan3D-DiT-v2-mini-Fast  | Guidance Distillation Version | 2025-03-18 | 0.6B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mini/tree/main/hunyuan3d-dit-v2-mini-fast)  |
-| Hunyuan3D-DiT-v2-mini       | Mini Image to Shape Model     | 2025-03-18 | 0.6B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mini/tree/main/hunyuan3d-dit-v2-mini)       |
+## Example scripts
 
+All examples now live in subfolders and have shorter names.
 
-Hunyuan3D-2mv Series
+### Apple Silicon / MPS examples
 
-| Model                     | Description                    | Date       | Size | Huggingface                                                                                  |
-|---------------------------|--------------------------------|------------|------|----------------------------------------------------------------------------------------------| 
-| Hunyuan3D-DiT-v2-mv-Turbo | Step Distillation Version      | 2025-03-19 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mv/tree/main/hunyuan3d-dit-v2-mv-turbo) |
-| Hunyuan3D-DiT-v2-mv-Fast  | Guidance Distillation Version  | 2025-03-18 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mv/tree/main/hunyuan3d-dit-v2-mv-fast)  |
-| Hunyuan3D-DiT-v2-mv       | Multiview Image to Shape Model | 2025-03-18 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mv/tree/main/hunyuan3d-dit-v2-mv)       |
+| Script | What it does |
+|---|---|
+| `examples/mps/demo_shape_paint_mps.py` | generate a demo shape and then texture it on MPS |
+| `examples/mps/paint_demo_mps.py` | texture an already-generated demo mesh on MPS |
+| `examples/mps/custom_shape_paint_mps.py` | generate and texture a custom image on MPS |
 
-Hunyuan3D-2 Series
+### Shape examples
 
-| Model                      | Description                 | Date       | Size | Huggingface                                                                               |
-|----------------------------|-----------------------------|------------|------|-------------------------------------------------------------------------------------------| 
-| Hunyuan3D-DiT-v2-0-Turbo   | Step Distillation Model     | 2025-03-19 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-turbo)   |
-| Hunyuan3D-DiT-v2-0-Fast    | Guidance Distillation Model | 2025-02-03 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-fast)    |
-| Hunyuan3D-DiT-v2-0         | Image to Shape Model        | 2025-01-21 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0)         |
-| Hunyuan3D-Paint-v2-0       | Texture Generation Model    | 2025-01-21 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0)       |
-| Hunyuan3D-Paint-v2-0-Turbo | Distillation Texure Model   | 2025-04-01 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0-turbo) |
-| Hunyuan3D-Delight-v2-0     | Image Delight Model         | 2025-01-21 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-delight-v2-0)     | 
+| Script | What it does |
+|---|---|
+| `examples/shape/shape_from_image.py` | standard single-image shape generation |
+| `examples/shape/shape_from_image_mini.py` | shape generation with the mini model |
+| `examples/shape/shape_from_image_v21.py` | shape generation with the 2.1 model |
+| `examples/shape/shape_from_multiview.py` | multiview shape generation |
+| `examples/shape/shape_multiview_fast.py` | faster multiview shape example |
+| `examples/shape/shape_flashvdm_fast.py` | shape example using FlashVDM |
+| `examples/shape/shape_mini_turbo_flashvdm.py` | fast mini turbo FlashVDM shape example |
 
-## 🤗 Get Started with Hunyuan3D 2.0
+### Texture / textured-shape examples
 
-Hunyuan3D 2.0 supports Macos, Windows, Linux. You may follow the next steps to use Hunyuan3D 2.0 via:
+| Script | What it does |
+|---|---|
+| `examples/texture/textured_shape_from_image.py` | end-to-end textured shape generation |
+| `examples/texture/textured_shape_from_image_mini.py` | end-to-end textured shape generation with mini shape model |
+| `examples/texture/textured_shape_from_multiview.py` | multiview textured-shape example |
+| `examples/texture/texture_multiview_fast.py` | faster multiview texture example |
 
-- [Code](#code-usage)
-- [Gradio App](#gradio-app)
-- [API Server](#api-server)
-- [Blender Addon](#blender-addon)
-- [Official Site](#official-site)
+### Debug / inspection examples
 
-### Install Requirements
+| Script | What it does |
+|---|---|
+| `examples/debug/paint_stage_dump.py` | saves intermediate paint stages |
+| `examples/debug/extract_glb_textures.py` | extracts embedded textures from GLBs |
+| `examples/debug/render_demo_views.py` | renders views from the demo textured mesh |
+| `examples/debug/mtl_render_probe.py` | checks MTL raster normal/position rendering |
+| `examples/debug/raster_direct_probe.py` | low-level mtldiffrast raster probe |
 
-Please install Pytorch via the [official](https://pytorch.org/) site. Then install the other requirements via
+---
+
+## Quick start
+
+Generate the demo shape and texture it on Apple Silicon:
 
 ```bash
-pip install -r requirements.txt
-pip install -e .
-# for texture
-cd hy3dgen/texgen/custom_rasterizer
-python3 setup.py install
-cd ../../..
-cd hy3dgen/texgen/differentiable_renderer
-python3 setup.py install
+python examples/mps/demo_shape_paint_mps.py
 ```
 
-### Code Usage
-
-We designed a diffusers-like API to use our shape generation model - Hunyuan3D-DiT and texture synthesis model -
-Hunyuan3D-Paint.
-
-You could assess **Hunyuan3D-DiT** via:
-
-```python
-from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline
-
-pipeline = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained('tencent/Hunyuan3D-2')
-mesh = pipeline(image='assets/demo.png')[0]
-```
-
-The output mesh is a [trimesh object](https://trimesh.org/trimesh.html), which you could save to glb/obj (or other
-format) file.
-
-For **Hunyuan3D-Paint**, do the following:
-
-```python
-from hy3dgen.texgen import Hunyuan3DPaintPipeline
-from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline
-
-# let's generate a mesh first
-pipeline = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained('tencent/Hunyuan3D-2')
-mesh = pipeline(image='assets/demo.png')[0]
-
-pipeline = Hunyuan3DPaintPipeline.from_pretrained('tencent/Hunyuan3D-2')
-mesh = pipeline(mesh, image='assets/demo.png')
-```
-
-Please visit [examples](examples) folder for more advanced usage, such as **multiview image to 3D generation** and *
-*texture generation
-for handcrafted mesh**.
-
-### Gradio App
-
-You could also host a [Gradio](https://www.gradio.app/) App in your own computer via:
-
-Standard Version
+Texture the existing demo mesh only:
 
 ```bash
-# Hunyuan3D-2mini
-python3 gradio_app.py --model_path tencent/Hunyuan3D-2mini --subfolder hunyuan3d-dit-v2-mini --texgen_model_path tencent/Hunyuan3D-2 --low_vram_mode
-# Hunyuan3D-2mv
-python3 gradio_app.py --model_path tencent/Hunyuan3D-2mv --subfolder hunyuan3d-dit-v2-mv --texgen_model_path tencent/Hunyuan3D-2 --low_vram_mode
-# Hunyuan3D-2
-python3 gradio_app.py --model_path tencent/Hunyuan3D-2 --subfolder hunyuan3d-dit-v2-0 --texgen_model_path tencent/Hunyuan3D-2 --low_vram_mode
+python examples/mps/paint_demo_mps.py
 ```
 
-Turbo Version
+Generate and texture your own image:
 
 ```bash
-# Hunyuan3D-2mini
-python3 gradio_app.py --model_path tencent/Hunyuan3D-2mini --subfolder hunyuan3d-dit-v2-mini-turbo --texgen_model_path tencent/Hunyuan3D-2 --low_vram_mode --enable_flashvdm
-# Hunyuan3D-2mv
-python3 gradio_app.py --model_path tencent/Hunyuan3D-2mv --subfolder hunyuan3d-dit-v2-mv-turbo --texgen_model_path tencent/Hunyuan3D-2 --low_vram_mode --enable_flashvdm
-# Hunyuan3D-2
-python3 gradio_app.py --model_path tencent/Hunyuan3D-2 --subfolder hunyuan3d-dit-v2-0-turbo --texgen_model_path tencent/Hunyuan3D-2 --low_vram_mode --enable_flashvdm
+python examples/mps/custom_shape_paint_mps.py --image path/to/image.png --prefix my_object
 ```
 
-### API Server
-
-You could launch an API server locally, which you could post web request for Image/Text to 3D, Texturing existing mesh,
-and e.t.c.
+Extract embedded textures from a GLB:
 
 ```bash
-python api_server.py --host 0.0.0.0 --port 8080
+python examples/debug/extract_glb_textures.py outputs/demo/demo_textured_mps.glb
 ```
 
-A demo post request for image to 3D without texture.
+---
 
-```bash
-img_b64_str=$(base64 -i assets/demo.png)
-curl -X POST "http://localhost:8080/generate" \
-     -H "Content-Type: application/json" \
-     -d '{
-           "image": "'"$img_b64_str"'",
-         }' \
-     -o test2.glb
-```
+## Output folders
 
-### Blender Addon
+Generated assets are now grouped by purpose instead of dumped into one flat folder.
 
-With an API server launched, you could also directly use Hunyuan3D 2.0 in your blender with
-our [Blender Addon](blender_addon.py). Please follow our tutorial to install and use.
+| Folder | What goes there |
+|---|---|
+| `outputs/demo/` | canonical demo outputs |
+| `outputs/custom/` | one-off custom runs |
+| `outputs/benchmark/` | speed-test outputs, optimized variants, profile artifacts |
+| `outputs/compare/` | visual comparison images |
+| `outputs/debug/extracted/` | extracted textures |
+| `outputs/debug/rendered_views/` | rendered inspection views |
+| `outputs/debug/stages/` | intermediate paint-stage images |
 
-https://github.com/user-attachments/assets/8230bfb5-32b1-4e48-91f4-a977c54a4f3e
+---
 
-### Official Site
+## Apple Silicon notes
 
-Don't forget to visit [Hunyuan3D](https://3d.hunyuan.tencent.com) for quick use, if you don't want to host yourself.
+This repo has local texture-pipeline work focused on MPS performance. The honest version is:
 
-## 📑 Open-Source Plan
+- the renderer itself was not the main bottleneck
+- CPU UV unwrap and texture-pipeline overhead mattered a lot
+- the big remaining cost is the multiview paint diffusion step
+- `hunyuan3d-paint-v2-0-turbo` is currently the most practical Mac paint path in this repo
+- `hunyuan3d-paintpbr-v2-1` is the 2.1 paint model we want to use when the local 2.1 setup is fully clean
 
-- [x] Inference Code
-- [x] Model Checkpoints
-- [x] Technical Report
-- [x] ComfyUI
-- [x] Finetuning
-- [ ] TensorRT Version
+---
 
-## 🔗 BibTeX
+## Original upstream project
 
-If you found this repository helpful, please cite our reports:
-
-```bibtex
-@misc{lai2025hunyuan3d25highfidelity3d,
-      title={Hunyuan3D 2.5: Towards High-Fidelity 3D Assets Generation with Ultimate Details}, 
-      author={Tencent Hunyuan3D Team},
-      year={2025},
-      eprint={2506.16504},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2506.16504}, 
-}
-
-@misc{hunyuan3d22025tencent,
-    title={Hunyuan3D 2.0: Scaling Diffusion Models for High Resolution Textured 3D Assets Generation},
-    author={Tencent Hunyuan3D Team},
-    year={2025},
-    eprint={2501.12202},
-    archivePrefix={arXiv},
-    primaryClass={cs.CV}
-}
-
-@misc{yang2024hunyuan3d,
-    title={Hunyuan3D 1.0: A Unified Framework for Text-to-3D and Image-to-3D Generation},
-    author={Tencent Hunyuan3D Team},
-    year={2024},
-    eprint={2411.02293},
-    archivePrefix={arXiv},
-    primaryClass={cs.CV}
-}
-```
-
-## Community Resources
-
-Thanks for the contributions of community members, here we have these great extensions of Hunyuan3D 2.0:
-
-- [ComfyUI-3D-Pack](https://github.com/MrForExample/ComfyUI-3D-Pack)
-- [ComfyUI-Hunyuan3DWrapper](https://github.com/kijai/ComfyUI-Hunyuan3DWrapper)
-- [Hunyuan3D-2-for-windows](https://github.com/sdbds/Hunyuan3D-2-for-windows)
-- [📦 A bundle for running on Windows | 整合包](https://github.com/YanWenKun/Hunyuan3D-2-WinPortable)
-- [Hunyuan3D-2GP](https://github.com/deepbeepmeep/Hunyuan3D-2GP)
-- [Kaggle Notebook](https://github.com/darkon12/Hunyuan3D-2GP_Kaggle)
-
-## Acknowledgements
-
-We would like to thank the contributors to
-the [Trellis](https://github.com/microsoft/TRELLIS),  [DINOv2](https://github.com/facebookresearch/dinov2), [Stable Diffusion](https://github.com/Stability-AI/stablediffusion), [FLUX](https://github.com/black-forest-labs/flux), [diffusers](https://github.com/huggingface/diffusers), [HuggingFace](https://huggingface.co), [CraftsMan3D](https://github.com/wyysf-98/CraftsMan3D),
-and [Michelangelo](https://github.com/NeuralCarver/Michelangelo/tree/main) repositories, for their open research and
-exploration.
-
-## Star History
-
-<a href="https://star-history.com/#Tencent/Hunyuan3D-2&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Tencent/Hunyuan3D-2&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Tencent/Hunyuan3D-2&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Tencent/Hunyuan3D-2&type=Date" />
- </picture>
-</a>
+This repository is derived from Tencent's Hunyuan3D-2 work. If you want the original upstream presentation, papers, and announcements, see the Tencent repo and Hugging Face pages linked above.

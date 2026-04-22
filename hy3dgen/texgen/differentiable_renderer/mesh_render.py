@@ -394,7 +394,6 @@ class MeshRender():
 
     def _render(
         self,
-        glctx,
         mvp,
         pos,
         pos_idx,
@@ -410,7 +409,7 @@ class MeshRender():
         if isinstance(resolution, (int, float)):
             resolution = [resolution, resolution]
         rast_out, rast_out_db = self.raster_rasterize(
-            glctx, pos_clip, pos_idx, resolution=resolution)
+            pos_clip, pos_idx, resolution=resolution)
 
         tex = tex.contiguous()
         if filter_mode == 'linear-mipmap-linear':

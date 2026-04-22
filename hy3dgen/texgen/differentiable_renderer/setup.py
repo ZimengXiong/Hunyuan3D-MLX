@@ -32,7 +32,9 @@ def get_platform_specific_args():
     elif sys.platform == 'darwin':
         compile_args = ['-O3', f'-std={cpp_std}', '-fPIC', '-Wall', '-Wextra',
                        '-stdlib=libc++', '-mmacosx-version-min=10.14']
-        link_args = ['-fPIC', '-stdlib=libc++', '-mmacosx-version-min=10.14', '-dynamiclib']
+        # setuptools already supplies the correct module linker flags on macOS.
+        # Adding -dynamiclib here conflicts with Python extension linking.
+        link_args = ['-fPIC', '-stdlib=libc++', '-mmacosx-version-min=10.14']
         extra_includes = []
     else:
         raise RuntimeError(f"Unsupported platform: {system}")
