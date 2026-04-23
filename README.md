@@ -76,8 +76,8 @@ M4 Max 40c
 | Paint 2.0-turbo (MLX) |  62.6s |
 | Paint 2.0 (MPS) | 302.4s |
 | Paint 2.0-turbo (MPS) | 222.1s |
-| Shape mini (MPS) | 86.8s |
-| Shape mini-turbo (MPS) |  253.1s |
+| Shape mini (MPS) | 253.1 |
+| Shape mini-turbo (MPS) | 86.8s |
 
 Notes:
 - Turbo and non-turbo are different checkpoints, so outputs are not pixel-identical.
